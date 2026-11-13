@@ -1,0 +1,10 @@
+{
+  "name": "My Money",
+  "short_name": "My Money",
+  "description": "Personal finance dashboard",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f5f6fb",
+  "theme_color": "#6366f1",
+  "icons": [{ "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}

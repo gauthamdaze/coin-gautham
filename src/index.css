@@ -1,0 +1,96 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #f5f6fb;
+  --card: rgba(255, 255, 255, 0.86);
+  --card-solid: #ffffff;
+  --line: rgba(15, 23, 42, 0.07);
+  --ink: #0f172a;
+  --ink-2: #475569;
+  --ink-3: #94a3b8;
+  --grid: #e9ebf3;
+  --track: #eef0f6;
+  --accent: #6366f1;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #07080d;
+    --card: rgba(22, 24, 33, 0.82);
+    --card-solid: #14161f;
+    --line: rgba(255, 255, 255, 0.07);
+    --ink: #f1f5f9;
+    --ink-2: #b4bfd0;
+    --ink-3: #6b7689;
+    --grid: #22252f;
+    --track: #232633;
+    --accent: #818cf8;
+    color-scheme: dark;
+  }
+}
+
+html { -webkit-text-size-adjust: 100%; -webkit-tap-highlight-color: transparent; }
+body {
+  @apply font-sans antialiased;
+  background: var(--bg);
+  color: var(--ink);
+  overscroll-behavior-y: none;
+}
+#root { min-height: 100dvh; }
+::selection { background: rgba(99, 102, 241, 0.25); }
+input, select, textarea, button { font: inherit; color: inherit; }
+input[type='number']::-webkit-inner-spin-button { opacity: 0.4; }
+
+@layer components {
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    @apply rounded-3xl shadow-soft backdrop-blur-xl;
+  }
+  .glass {
+    background: color-mix(in srgb, var(--card-solid) 72%, transparent);
+    border: 1px solid var(--line);
+    @apply backdrop-blur-2xl backdrop-saturate-150;
+  }
+  .t-ink { color: var(--ink); }
+  .t-2 { color: var(--ink-2); }
+  .t-3 { color: var(--ink-3); }
+  .hairline { border-color: var(--line); }
+  .bg-track { background: var(--track); }
+  .bg-solid { background: var(--card-solid); }
+  .field {
+    background: var(--card-solid);
+    border: 1px solid var(--line);
+    @apply w-full rounded-2xl px-3.5 py-2.5 text-[15px] outline-none transition focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-400;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition active:scale-[.97] disabled:opacity-40 disabled:pointer-events-none select-none;
+  }
+  .btn-primary { @apply btn text-white bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 shadow-glow hover:brightness-110; }
+  .btn-soft { @apply btn; background: var(--track); }
+  .btn-soft:hover { filter: brightness(0.97); }
+  .btn-ghost { @apply btn hover:bg-black/5 dark:hover:bg-white/5; }
+  .btn-danger { @apply btn text-rose-600 bg-rose-500/10 hover:bg-rose-500/15; }
+  .chip { @apply inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-medium transition; }
+  .section-title { @apply font-display text-[17px] font-bold tracking-tight; }
+  .num { font-variant-numeric: tabular-nums; }
+}
+
+/* Recharts polish */
+.recharts-cartesian-axis-tick-value { fill: var(--ink-3); font-size: 11px; }
+.recharts-cartesian-grid line { stroke: var(--grid); }
+.recharts-surface:focus, .recharts-wrapper:focus, .recharts-sector:focus { outline: none; }
+.recharts-tooltip-cursor { fill: color-mix(in srgb, var(--ink) 4%, transparent); }
+
+/* hide scrollbars on chip rows */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { scrollbar-width: none; }
+
+.safe-bottom { padding-bottom: max(env(safe-area-inset-bottom), 10px); }
+.safe-top { padding-top: env(safe-area-inset-top); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
+}
