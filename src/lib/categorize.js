@@ -4,7 +4,8 @@ export const norm = (s) =>
 const reCache = new Map();
 export function kwMatch(nd, k) {
   if (!k) return false;
-  if (k.length >= 5 || /\s/.test(k)) return nd.includes(k);
+  // statements often wrap descriptions mid-word ("SA LARY"), so long keywords also match with spaces removed
+  if (k.length >= 5 || /\s/.test(k)) return nd.includes(k) || nd.replace(/ /g, '').includes(k.replace(/ /g, ''));
   let re = reCache.get(k);
   if (!re) {
     re = new RegExp('(^|[^a-z0-9])' + k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '([^a-z0-9]|$)');

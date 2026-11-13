@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { CreditCard, Download, FileUp, Landmark, Link2, Mail, MessageSquareText, Plus, RotateCcw, ShieldCheck, Trash2, Upload } from 'lucide-react';
+import { CreditCard, Download, FileUp, Landmark, Link2, Loader2, Lock, Mail, MessageSquareText, Plus, RotateCcw, ShieldCheck, Trash2, Upload } from 'lucide-react';
 import { ask, toast, useData, useUI } from '../lib/store';
 import { cx, fmt, fmt2, fmtDate } from '../lib/format';
 import { autoCat, sortedRules } from '../lib/categorize';
@@ -14,15 +14,20 @@ export default function ImportPage() {
   const clearTx = useData((s) => s.clearTx), loadSample = useData((s) => s.loadSample), restore = useData((s) => s.restore);
   const [drag, setDrag] = useState(false);
   const [imp, setImp] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [pw, setPw] = useState(null); // { file, value, error }
   const [newAcc, setNewAcc] = useState({ name: '', type: 'credit' });
   const fileRef = useRef(null), backupRef = useRef(null);
   const counts = {}; tx.forEach((t) => (counts[t.acc] = (counts[t.acc] || 0) + 1));
 
-  const start = async (file) => {
+  const start = async (file, password) => {
     if (!file) return;
-    if (/\.pdf$/i.test(file.name)) { toast('PDF can’t be read yet — download CSV/Excel from net banking', 'warn'); return; }
-    try { setImp(await prepareImport(file, accounts)); }
-    catch (e) { toast(e.message || 'Could not read that file', 'warn'); }
+    setBusy(true);
+    try { setImp(await prepareImport(file, accounts, password)); setPw(null); }
+    catch (e) {
+      if (e && e.name === 'PdfPasswordError') setPw({ file, value: '', error: e.incorrect ? 'That password didn’t work — try again.' : '' });
+      else toast(e.message || 'Could not read that file', 'warn');
+    } finally { setBusy(false); }
   };
   const exportBackup = () => {
     const s = useData.getState();
@@ -44,18 +49,18 @@ export default function ImportPage() {
           <motion.div
             onDragOver={(e) => { e.preventDefault(); setDrag(true); }} onDragLeave={() => setDrag(false)}
             onDrop={(e) => { e.preventDefault(); setDrag(false); start(e.dataTransfer.files?.[0]); }}
-            onClick={() => fileRef.current?.click()} animate={{ scale: drag ? 1.02 : 1 }}
+            onClick={() => !busy && fileRef.current?.click()} animate={{ scale: drag ? 1.02 : 1 }}
             className={cx('flex cursor-pointer flex-col items-center rounded-[26px] border-2 border-dashed px-6 py-8 text-center transition', drag ? 'border-indigo-500 bg-indigo-500/10' : 'hairline hover:border-indigo-400 hover:bg-indigo-500/[.04]')}
           >
             <UploadArt className="h-36 w-56" />
-            <h2 className="section-title mt-3">Drop your statement here</h2>
-            <p className="t-3 mt-1 max-w-sm text-sm">CSV, XLS or XLSX from net banking — bank / debit-card account or credit-card statement. Read privately in your browser.</p>
-            <span className="btn-primary mt-5"><Upload size={16} /> Choose file</span>
+            <h2 className="section-title mt-3">{busy ? 'Reading your statement…' : 'Drop your statement here'}</h2>
+            <p className="t-3 mt-1 max-w-sm text-sm">PDF, CSV, XLS or XLSX — bank / debit-card or credit-card statement. Password-protected PDFs work too. Read privately in your browser.</p>
+            <span className="btn-primary mt-5">{busy ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />} {busy ? 'Reading…' : 'Choose file'}</span>
           </motion.div>
-          <input ref={fileRef} type="file" accept=".csv,.tsv,.txt,.xls,.xlsx" hidden onChange={(e) => { start(e.target.files?.[0]); e.target.value = ''; }} />
+          <input ref={fileRef} type="file" accept=".pdf,.csv,.tsv,.txt,.xls,.xlsx,application/pdf" hidden onChange={(e) => { start(e.target.files?.[0]); e.target.value = ''; }} />
           <div className="mt-5 grid gap-2 text-[13px] sm:grid-cols-3">
             {[
-              { I: ShieldCheck, t: 'Stays on your device', d: 'Data is saved in this browser only.' },
+              { I: ShieldCheck, t: 'Stays on your device', d: 'Files & passwords never leave this browser.' },
               { I: RotateCcw, t: 'No double counting', d: 'Card-bill payments become transfers.' },
               { I: FileUp, t: 'Safe to re-import', d: 'Duplicate rows are skipped.' },
             ].map((x) => (
@@ -125,6 +130,14 @@ export default function ImportPage() {
       </Card>
 
       <ImportSheet imp={imp} setImp={setImp} sample={sample} />
+      <Sheet open={!!pw} onClose={() => setPw(null)} title="This PDF is password-protected" subtitle={pw?.file?.name}
+        footer={<><button className="btn-soft" onClick={() => setPw(null)}>Cancel</button><button className="btn-primary" disabled={!pw?.value || busy} onClick={() => start(pw.file, pw.value)}>{busy ? <Loader2 size={16} className="animate-spin" /> : <Lock size={16} />} Unlock</button></>}>
+        <form onSubmit={(e) => { e.preventDefault(); if (pw?.value) start(pw.file, pw.value); }}>
+          <input type="password" autoFocus autoComplete="off" className="field" placeholder="Statement password" value={pw?.value || ''} onChange={(e) => setPw({ ...pw, value: e.target.value, error: '' })} aria-label="PDF password" />
+          {pw?.error && <p className="mt-2 text-sm font-medium text-rose-500">{pw.error}</p>}
+          <p className="t-3 mt-3 text-[13px] leading-relaxed">Banks often use a mix of your name, date of birth (DDMM or DDMMYYYY), PAN or customer ID — check the e-mail your statement came with. The password is used only to open the file in this browser and is never saved.</p>
+        </form>
+      </Sheet>
     </div>
   );
 }

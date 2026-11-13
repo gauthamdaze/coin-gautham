@@ -98,8 +98,12 @@ export function guessMap(head) {
 }
 
 /* ---------- file reading ---------- */
-export async function readStatement(file) {
+export async function readStatement(file, password) {
   const name = file.name.toLowerCase();
+  if (/\.pdf$/.test(name) || file.type === 'application/pdf') {
+    const { readPdfRows } = await import('./pdf');
+    return readPdfRows(file, password);
+  }
   if (/\.(xlsx|xls)$/.test(name)) {
     const XLSX = await import('xlsx');
     const wb = XLSX.read(await file.arrayBuffer(), { type: 'array', cellDates: true });
@@ -115,8 +119,8 @@ export async function readStatement(file) {
 }
 
 /** Prepares an import session from a file. */
-export async function prepareImport(file, accounts) {
-  let rows = await readStatement(file);
+export async function prepareImport(file, accounts, password) {
+  let rows = await readStatement(file, password);
   rows = rows.filter((r) => r.some((c) => c !== '' && c != null));
   const hi = findHeader(rows);
   const head = hi >= 0 ? rows[hi].map(String) : (rows[0] || []).map((_, i) => 'Column ' + (i + 1));

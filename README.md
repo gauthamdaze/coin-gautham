@@ -2,7 +2,7 @@
 
 A modern, mobile-first personal finance dashboard with an iOS-style feel. Import your bank / debit-card and credit-card statements, categorise spending, set budgets, and see forecasts.
 
-**Stack:** React 18 · Vite 5 · Tailwind CSS 3 · Recharts · Framer Motion · Zustand · SheetJS · Lucide icons
+**Stack:** React 18 · Vite 5 · Tailwind CSS 3 · Recharts · Framer Motion · Zustand · SheetJS · pdf.js · Lucide icons
 
 ## ✨ Features
 
@@ -10,7 +10,12 @@ A modern, mobile-first personal finance dashboard with an iOS-style feel. Import
 - **Activity**: iOS-style list grouped by day, search, filter chips, and bulk select. Tap a transaction to open a category sheet. **Apply to similar & remember** creates a rule for future imports. A + button adds cash transactions.
 - **Budgets**: add, rename or delete categories, pick an icon and colour, and set a monthly budget with a slider. **Suggest budgets** uses your 3-month average. You can also manage the auto-categorisation rules here.
 - **Insights**: income vs spending bars, savings trend line, a stacked chart of how your category mix changes over time, spending by weekday, an account pie chart, a next-month forecast per category, and your biggest spends.
-- **Import**: CSV / XLS / XLSX statements, with the columns detected automatically (HDFC, ICICI, SBI, Axis, Kotak and credit-card formats). You can fix the column mapping and see a preview before importing. Duplicates are skipped.
+- **Import**: **PDF**, CSV, XLS or XLSX statements, with the columns detected automatically (HDFC, ICICI, SBI, Axis, Kotak and credit-card formats). You can fix the column mapping and see a preview before importing. Duplicates are skipped.
+- **PDF statements** (`src/lib/pdf.js`, pdf.js in the browser):
+  - Rebuilds the transaction table from where text sits on each page, handling repeated page headers, two-line column headings and descriptions that wrap onto the next line.
+  - Statements without a clear header fall back to reading "date … description … amount … balance" lines, using the running balance (or SBI's "TO/BY TRANSFER" wording) to tell money in from money out.
+  - **Password-protected PDFs** are supported. The password is used only to open the file in the browser and is never stored.
+  - Scanned (image-only) PDFs are detected, and the app asks for the e-statement instead.
 - **No double counting**: credit-card bill payments are filed as *transfers*, so importing both the bank and the card statement doesn't count spending twice.
 - **Forecast**: next month = 50% this month (projected to month-end) + 30% last month + 20% the month before, per category.
 - Dark mode (follows the system setting), spring animations, swipe-down sheets, reduced-motion support, installable as a PWA.
@@ -51,6 +56,7 @@ src/
     store.js              # Zustand store (persisted to localStorage) + UI state
     analytics.js          # monthly summaries, projections, forecasts
     parser.js             # statement parsing (CSV/XLSX, Indian date & Dr/Cr formats)
+    pdf.js                # PDF statement → table reconstruction (password support)
     categorize.js         # keyword rules engine
     defaults.js           # categories, colours, icons, starter rules
     sample.js             # 6 months of realistic sample data
@@ -62,4 +68,4 @@ src/
 - **Bank e-mail parsing**: Gmail API for transaction alerts and e-statements
 - **SMS alerts**: an Android companion app or SMS-forwarding webhook
 - **Account Aggregator** (RBI AA framework) through a licensed FIU partner (e.g. Setu, Finvu, OneMoney)
-- PDF statement parsing
+- OCR for scanned PDF statements
